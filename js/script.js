@@ -8,6 +8,7 @@ class memoTest {
         this.difficulty='';
         this.correctImg=[];
         this.cardsAggregators=[];
+        this.numberAttempts = 0;
 
         // html selectors
 
@@ -15,6 +16,8 @@ class memoTest {
         this.generalContainer = document.querySelector('.contenedor-general');
         this.message = document.querySelector('h2.mensaje');
         this.blockedScreen = document.querySelector('.pantalla-bloqueada');
+        this.containerIssues = document.createElement('div')
+        this.level = document.createElement('div')
 
         // call to events
         this.eventListeners()
@@ -24,8 +27,45 @@ class memoTest {
     // create listeners
     eventListeners(){
         window.addEventListener('DOMContentLoaded', ()=>{
+            this.selecLevel();
             this.loadScreen();
+
+            //stop default events with right click
+            window.addEventListener('contextmenu', e => {
+                e.preventDefault();
+            }, false)
         })
+    }
+
+
+    selecLevel(){
+        const msg = prompt('Elige el nivel : Fácil, Medio, Difícil. (Nivel medio pre-determinado)')
+
+        switch (msg.toLowerCase()) {
+            case ('intermedio'):
+                this.numberAttempts = 5;
+                this.difficulty = 'Intermedio'
+                break;
+            case ('dificil'):
+                this.numberAttempts = 1;
+                this.difficulty = 'Difícil'
+                break;
+            case ('facil'):
+                this.numberAttempts = 20;
+                this.difficulty = 'Fácil'
+                break;
+            default:
+                this.numberAttempts = 5;
+                this.difficulty = 'Intermedio'
+                break;
+        }
+
+
+        //load issues count
+        this.newContainerIssues();
+
+        this.divAttempts();
+
     }
 
     // load cards in the html   
@@ -63,6 +103,8 @@ class memoTest {
         //on load, start game
         this.startGame();
 
+
+
     }
 
     // start game
@@ -72,7 +114,9 @@ class memoTest {
         // adding event for clicks
         cards.forEach( card =>{
             card.addEventListener('click', e =>{
-                this.clickCards(e)
+                if (!e.target.classList.contains('acertada')&&!e.target.classList.contains('tarjeta-img')){
+                    this.clickCards(e)
+                }
             })
         })
     }
@@ -106,6 +150,7 @@ class memoTest {
         arr.forEach(card =>{
             card.classList.add('acertada');
             this.correctImg.push(card);
+            this.gameWinner();
         });
     }
 
@@ -129,12 +174,64 @@ class memoTest {
             } else {
                 this.turnOffEffect(this.cardsAggregators);
                 this.issues++;
+                this.issuesCount();
+                this.gameLoser();
             }
             this.verifyCards.splice(0);
             this.cardsAggregators.splice(0);
         }
     }
 
+    // check if the user win
+    gameWinner(){
+        if (this.correctImg.length === this.numerOfCards){
+            setTimeout(()=>{
+                this.blockedScreen.style.display = 'block';
+                this.message.innerText = 'Felicidades, ganaste el test!';
+            },1000);
+
+            //reload page when the user win
+            setTimeout(()=>{
+                location.reload()
+            }, 4000)
+        }
+    }
+
+    //lose the game 
+    gameLoser(){
+        if(this.issues === this.numberAttempts){
+            setTimeout(()=>{
+                this.blockedScreen.style.display = 'block';
+                this.message.innerText = 'Has perdido, vuelve a codear!';
+            },1000)
+             //reload page when the user lose
+             setTimeout(()=>{
+                location.reload()
+            }, 4000)
+        }                
+
+    }
+
+    // issues count 
+    issuesCount(){
+        this.containerIssues.innerText = `Errores : ${this.issues}`;
+    }
+
+    newContainerIssues(){
+        this.containerIssues.classList.add('error');
+        this.issuesCount();
+        this.generalContainer.appendChild(this.containerIssues)
+    }
+    
+    //create div with level
+    divAttempts () {
+        this.level.classList.add('nivel-dificultad');
+        this.level.innerHTML = `Nivel seleccionado : ${this.difficulty}`;
+        this.generalContainer.appendChild(this.level)
+    }
+
+
 }
 
 new memoTest(); 
+
